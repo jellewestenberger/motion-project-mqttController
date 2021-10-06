@@ -1,10 +1,7 @@
-import sys
 import paho.mqtt.publish as publish
-import json
 import paho.mqtt.subscribe as subscribe
 import paho.mqtt.client as mqtt
 import hostsettings
-import threading
 import os
 import psutil
 import subprocess
@@ -12,28 +9,30 @@ import time
 hostname = hostsettings.host
 username = hostsettings.username
 password = hostsettings.password
-port = 1883 
+port = hostsettings.port 
 
 global base_topic_switch
 global motion_status
 update_interval = 60
-
-base_topic_switch = "homeassistant/switch/roomcam_toggle" # base mqtt topic
+entityname="roomcam_toggle"
+base_topic_switch = "homeassistant/switch/"+entityname # base mqtt topic
 
 def on_connect(mqttc,obj, flags, rc):
     print("Connected to mqtt broker. \t rc: ",str(rc))
-    config_switch = u'{"~": "%s", "name": "roomcam_toggle", "stat_t": "~/state", "cmd_t": "~/set"}' % (base_topic_switch) # config payload for mqtt discovery 
+    config_switch = u'{"~": "%s", "name": "%s", "stat_t": "~/state", "cmd_t": "~/set"}' % (base_topic_switch, entityname) # config payload for mqtt discovery 
 
     mqttc.publish(base_topic_switch+"/config",config_switch,retain=True)
 def on_message(mqttc, obj, msg):
     global motion_status
     print("Received message: "+ msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-    if msg.topic.split("homeassistant/switch")[-1] == '/roomcam_toggle/set':
+    if msg.topic.split("homeassistant/switch")[-1] == '/%s/set' % entityname:
         payload=msg.payload.decode('utf-8') 
         if not(motion_status) and payload == "ON":
             turn_on_motion()
         elif motion_status and payload == "OFF": 
             turn_off_motion()
+    else:
+        print("Not a valid command message")
                
             
 

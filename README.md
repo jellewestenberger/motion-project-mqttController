@@ -3,7 +3,7 @@ This script creates an auto-discoverable mqtt-switch for Homeassistant that allo
 
 Currently only tested on Debian based hosts.
 
-## Prequisites: 
+## Prerequisites: 
 * [motion-project](https://github.com/Motion-Project/motion) installed and configured on the same host where this script will run from.
 *   A homeassistant instance with the mqtt integration installed and mqtt discovery enabled.
 * An existing mqtt broker (tested with Mosquitto)

@@ -1,2 +1,4 @@
 credentials.py
+hostsettings.py
 *.pyc
+.vscode

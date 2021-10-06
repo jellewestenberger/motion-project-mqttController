@@ -22,9 +22,9 @@ base_topic_switch = "homeassistant/switch/roomcam_toggle" # base mqtt topic
 
 def on_connect(mqttc,obj, flags, rc):
     print("Connected to mqtt broker. \t rc: ",str(rc))
-    config_switch = u'{"~": "%s", "name": "roomcam_toggle", "stat_t": "~/state", "cmd_t": "~/set", "exp_aft": "%s"}' % (base_topic_switch,str(3*update_interval)) # config payload for mqtt discovery 
+    config_switch = u'{"~": "%s", "name": "roomcam_toggle", "stat_t": "~/state", "cmd_t": "~/set"}' % (base_topic_switch) # config payload for mqtt discovery 
 
-    mqttc.publish(base_topic_switch+"/config",config_switch,retain=False)
+    mqttc.publish(base_topic_switch+"/config",config_switch,retain=True)
 def on_message(mqttc, obj, msg):
     global motion_status
     print("Received message: "+ msg.topic + " " + str(msg.qos) + " " + str(msg.payload))

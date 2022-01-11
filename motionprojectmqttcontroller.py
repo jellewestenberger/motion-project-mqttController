@@ -10,7 +10,8 @@ hostname = hostsettings.host
 username = hostsettings.username
 password = hostsettings.password
 port = hostsettings.port 
-
+global flag_connected
+flag_connected = False
 global base_topic_switch
 global motion_status
 update_interval = 60
@@ -18,10 +19,18 @@ entityname="roomcam_toggle"
 base_topic_switch = "homeassistant/switch/"+entityname # base mqtt topic
 
 def on_connect(mqttc,obj, flags, rc):
+    mqttc.subscribe(base_topic_switch+"/set")
+    global flag_connected
     print("Connected to mqtt broker. \t rc: ",str(rc))
     config_switch = u'{"~": "%s", "name": "%s", "stat_t": "~/state", "cmd_t": "~/set"}' % (base_topic_switch, entityname) # config payload for mqtt discovery 
-
+    flag_connected = True
     mqttc.publish(base_topic_switch+"/config",config_switch,retain=True)
+def on_disconnect(mqttc,userdata,rc):
+    global flag_connected
+    flag_connected = False
+
+    print("Disconnected from MQTT server")  
+
 def on_message(mqttc, obj, msg):
     global motion_status
     print("Received message: "+ msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
@@ -84,26 +93,40 @@ mqttc=mqtt.Client()
 mqttc.username_pw_set(username=username,password=password)
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
+mqttc.on_disconnect = on_disconnect
 mqttc.on_publish = on_publish
 mqttc.on_subscribe = on_subscribe
+try:
+    mqttc.connect(host=hostname,port=port)
+except Exception as ex:
+    print(ex)
 
-mqttc.connect(host=hostname,port=port)
-mqttc.subscribe(base_topic_switch+"/set")
 motion_status_old = check_motion_project("motion")
 # read_dht(dhtsensor,dhtpin,15,mqttc)
 # mqttc.loop_forever()
 print("Running")
 seconds = time.time()
+loop_interval = 1
 while True:
     mqttc.loop(timeout=2)
     motion_status = check_motion_project("motion")
-    if motion_status != motion_status_old:
-        update_switchstate(motion_status)
-        motion_status_old = motion_status
-    
-    if (time.time()-seconds) >= update_interval:
-        print("Regular update")
-        update_switchstate(motion_status)
-        seconds = time.time()
-    
-    time.sleep(1)
+    if flag_connected:
+        loop_interval = 1
+        if motion_status != motion_status_old:
+            update_switchstate(motion_status)
+            motion_status_old = motion_status
+        
+        if (time.time()-seconds) >= update_interval:
+
+            print("Regular update")
+            update_switchstate(motion_status)
+            seconds = time.time()
+    else:
+        loop_interval = 5
+        print("Reconnecting")
+        try:
+            mqttc.reconnect()
+        except Exception as ex:
+            print(ex)
+        
+    time.sleep(loop_interval)

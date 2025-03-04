@@ -61,10 +61,10 @@ def check_motion_project(processName):
         
 def turn_on_motion():
     print("Switching on motion-project") 
-    p=subprocess.Popen("sudo service motion restart ; sudo motion",shell=True)
+    p=subprocess.Popen("sudo motion",shell=True)
 def turn_off_motion():
     print("Turning off motion-project") 
-    os.system("sudo killall motion")
+    os.system("sudo killall -9 motion")
 
 def update_switchstate(motion_status):
     print("Updating state")

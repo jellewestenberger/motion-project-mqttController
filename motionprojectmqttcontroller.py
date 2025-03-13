@@ -65,6 +65,8 @@ def turn_on_motion():
 def turn_off_motion():
     print("Turning off motion-project") 
     os.system("sudo killall -9 motion")
+    os.system(f'mosquitto_pub -h {hostname} -u {username} -P {password} -t homeassistant/security/roomcam -m "OFF"')
+    print("published OFF to homeassistant/security/roomcam")
 
 def update_switchstate(motion_status):
     print("Updating state")
